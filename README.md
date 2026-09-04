@@ -48,17 +48,7 @@ A SQLite-backed expense tracker that lets you log spending by category and analy
 
 ### Entity Relationship Diagram
 
-```
-categories                expenses
-──────────────────        ──────────────────────────
-PK  id   INTEGER    ◄──┐  PK  id            INTEGER
-    name TEXT       │     FK  category_id   INTEGER  ──► categories.id
-                    └────     amount        REAL
-                              description   TEXT
-                              date          TEXT
-```
-
-**Relationship:** One `category` → many `expenses` (one-to-many)
+![erd](expense_erd.png)
 
 ---
 
