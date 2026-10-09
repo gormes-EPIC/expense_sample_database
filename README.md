@@ -1,6 +1,6 @@
 # Personal Expense Tracker
 
-A SQLite-backed expense tracker that lets you log spending by category and analyze where your money goes. The database stores expenses and the categories they belong to, and is designed to back a simple web dashboard.
+A PostgreSQL-backed expense tracker that lets you log spending by category and analyze where your money goes. The database stores expenses and the categories they belong to, and is designed to back a simple web dashboard.
 
 ---
 
@@ -32,14 +32,14 @@ A SQLite-backed expense tracker that lets you log spending by category and analy
 - `categories.name` must not be null or empty, and must be unique — no duplicate category names are allowed.
 - `expenses.amount` must be a positive number greater than zero.
 - `expenses.description` must not be null or empty.
-- `expenses.date` must be stored in `YYYY-MM-DD` format so date comparisons and range queries work correctly.
+- `expenses.date` must be a valid calendar date (stored as `DATE`, entered as `YYYY-MM-DD`) so date comparisons and range queries work correctly.
 
 **Relationship Constraints**
 - An expense cannot exist without a valid, existing category (`category_id` is a non-nullable foreign key referencing `categories.id`).
 
 ### Derivation Rules
 - Total spending for a category = `SUM(amount)` of all expenses where `category_id` matches.
-- Total spending for a month = `SUM(amount)` of all expenses where `strftime('%Y-%m', date)` matches the target month.
+- Total spending for a month = `SUM(amount)` of all expenses where `to_char(date, 'YYYY-MM')` matches the target month.
 - Number of expenses per category = `COUNT(id)` grouped by `category_id`.
 
 ---
@@ -48,7 +48,23 @@ A SQLite-backed expense tracker that lets you log spending by category and analy
 
 ### Entity Relationship Diagram
 
-![erd](expense_erd.png)
+```mermaid
+erDiagram
+    categories ||--o{ expenses : "has"
+
+    categories {
+        INTEGER id PK
+        TEXT name UK
+    }
+
+    expenses {
+        INTEGER id PK
+        INTEGER category_id FK
+        NUMERIC amount
+        TEXT description
+        DATE date
+    }
+```
 
 ---
 
@@ -58,18 +74,18 @@ A SQLite-backed expense tracker that lets you log spending by category and analy
 
 | Column | Data Type | Constraints | Description |
 |--------|-----------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each category |
+| `id` | INTEGER | PRIMARY KEY, GENERATED ALWAYS AS IDENTITY | Unique identifier for each category |
 | `name` | TEXT | NOT NULL, UNIQUE | Human-readable category label (e.g., "Food & Dining") |
 
 #### Table: `expenses`
 
 | Column | Data Type | Constraints | Description |
 |--------|-----------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each expense |
+| `id` | INTEGER | PRIMARY KEY, GENERATED ALWAYS AS IDENTITY | Unique identifier for each expense |
 | `category_id` | INTEGER | NOT NULL, FOREIGN KEY → `categories.id` | The category this expense belongs to |
-| `amount` | REAL | NOT NULL, CHECK (amount > 0) | Dollar amount of the expense |
+| `amount` | NUMERIC(10, 2) | NOT NULL, CHECK (amount > 0) | Dollar amount of the expense |
 | `description` | TEXT | NOT NULL | Short note describing what the expense was for |
-| `date` | TEXT | NOT NULL | Date of the expense in `YYYY-MM-DD` format |
+| `date` | DATE | NOT NULL | Date of the expense |
 
 ---
 

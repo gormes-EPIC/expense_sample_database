@@ -42,7 +42,7 @@ SELECT c.name        AS category,
 FROM categories c
 LEFT JOIN expenses e ON c.id = e.category_id
 GROUP BY c.id, c.name
-ORDER BY total_spent DESC;
+ORDER BY total_spent DESC NULLS LAST;
 
 -- Use Case 7: As a user, I need to view expenses within a date range.
 -- Replace the date strings with the desired start and end dates.
@@ -60,7 +60,7 @@ ORDER BY e.date DESC;
 -- Replace '2026-09' with the desired year-month.
 SELECT SUM(amount) AS monthly_total
 FROM expenses
-WHERE strftime('%Y-%m', date) = '2026-09';
+WHERE to_char(date, 'YYYY-MM') = '2026-09';
 
 -- Use Case 9: As a user, I need to delete an expense.
 -- Replace 1 with the id of the expense to delete.
